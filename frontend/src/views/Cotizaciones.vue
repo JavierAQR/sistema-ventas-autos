@@ -478,7 +478,7 @@ const guardarCotizacion = async () => {
   } catch (error) {
     console.error("Error guardando cotización:", error);
 
-    alert(error.response?.data?.message || "Error al guardar la cotización");
+    alert(error.response?.data?.mensaje || "Error al guardar la cotización");
   } finally {
     cargando.value = false;
   }

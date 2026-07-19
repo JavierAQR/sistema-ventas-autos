@@ -61,20 +61,8 @@
               <td class="p-3">S/ {{ vehiculo.precio }}</td>
 
               <td class="p-3">
-                <span
-                  class="px-3 py-1 rounded-full text-sm"
-                  :class="
-                    vehiculo.stock > 0
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
-                  "
-                >
-                  {{
-                    vehiculo.stock > 0
-                      ? vehiculo.stock + " disponibles"
-                      : "Agotado"
-                  }}
-                </span>
+                {{ vehiculo.stock_disponible }} /
+                {{ vehiculo.stock }} disponibles
               </td>
 
               <td class="p-3">
@@ -251,6 +239,4 @@ const eliminarVehiculo = async (id) => {
 
   cargarVehiculos();
 };
-
-
 </script>

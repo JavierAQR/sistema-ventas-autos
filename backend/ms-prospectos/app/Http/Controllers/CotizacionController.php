@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cotizacion;
 use App\Models\Venta;
+use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,8 +12,10 @@ class CotizacionController extends Controller
 {
     public function index()
     {
-        // Magia de Eloquent: Trae la cotización JUNTO con los datos del prospecto y el vehículo
-        $cotizaciones = Cotizacion::with(['prospecto', 'vehiculo'])->orderBy('created_at', 'desc')->get();
+        $cotizaciones = Cotizacion::with(['prospecto', 'vehiculo'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return response()->json($cotizaciones, 200);
     }
 
@@ -20,17 +23,24 @@ class CotizacionController extends Controller
     {
         $data = $request->validate([
             'prospecto_id' => 'required|exists:prospectos,id',
-            'vehiculo_id' => 'required|exists:vehiculos,id',
+            'vehiculo_id'  => 'required|exists:vehiculos,id',
             'precio_final' => 'required|numeric|min:0',
-            'estado' => 'nullable|in:pendiente,aprobada,rechazada',
-            'observaciones' => 'nullable|string'
+            'estado'       => 'required|in:pendiente,aprobada,rechazada',
         ]);
+
+        $vehiculo = Vehiculo::find($data['vehiculo_id']);
+
+        if (!$vehiculo->tieneStockDisponible()) {
+            return response()->json([
+                'mensaje' => 'No se puede cotizar: el vehículo no tiene stock disponible.'
+            ], 422);
+        }
 
         $cotizacion = Cotizacion::create($data);
 
         return response()->json([
-            'mensaje' => 'Cotización generada',
-            'cotizacion' => $cotizacion
+            'mensaje' => 'Cotización registrada correctamente.',
+            'cotizacion' => $cotizacion->fresh(['prospecto', 'vehiculo'])
         ], 201);
     }
 
@@ -45,14 +55,27 @@ class CotizacionController extends Controller
         }
 
         $data = $request->validate([
-            'prospecto_id' => 'sometimes|exists:prospectos,id',
-            'vehiculo_id' => 'sometimes|exists:vehiculos,id',
-            'precio_final' => 'sometimes|numeric|min:0',
-            'estado' => 'sometimes|in:pendiente,aprobada,rechazada',
+            'prospecto_id'  => 'sometimes|exists:prospectos,id',
+            'vehiculo_id'   => 'sometimes|exists:vehiculos,id',
+            'precio_final'  => 'sometimes|numeric|min:0',
+            'estado'        => 'sometimes|in:pendiente,aprobada,rechazada',
             'observaciones' => 'nullable|string'
         ]);
 
-        // Actualizamos la cotización
+        $seAprueba = isset($data['estado']) && $data['estado'] === 'aprobada';
+
+        // Validar stock ANTES de guardar cualquier cambio, si se está aprobando
+        if ($seAprueba) {
+            $vehiculoId = $data['vehiculo_id'] ?? $cotizacion->vehiculo_id;
+            $vehiculo = Vehiculo::find($vehiculoId);
+
+            if (!$vehiculo || !$vehiculo->tieneStockDisponible()) {
+                return response()->json([
+                    'mensaje' => 'No se puede aprobar la cotización: el vehículo no tiene stock disponible.'
+                ], 422);
+            }
+        }
+
         $cotizacion->update($data);
 
         /*
@@ -61,35 +84,36 @@ class CotizacionController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (
-            isset($data['estado']) &&
-            $data['estado'] === 'aprobada'
-        ) {
-
+        if ($seAprueba) {
             Venta::firstOrCreate(
-            [
-                'prospecto_id'=>$cotizacion->prospecto_id,
-                'vehiculo_id'=>$cotizacion->vehiculo_id,
-            ],
-            [
-                'vendedor_id'=>Auth::id(),
-                'monto_venta'=>$cotizacion->precio_final,
-                'estado'=>'realizada'
-            ]);
+                [
+                    'prospecto_id' => $cotizacion->prospecto_id,
+                    'vehiculo_id'  => $cotizacion->vehiculo_id,
+                ],
+                [
+                    'vendedor_id' => Auth::id(),
+                    'monto_venta' => $cotizacion->precio_final,
+                    'estado'      => 'realizada'
+                ]
+            );
         }
 
         return response()->json([
             'mensaje' => 'Cotización actualizada correctamente',
-            'cotizacion' => $cotizacion
+            'cotizacion' => $cotizacion->fresh(['prospecto', 'vehiculo'])
         ], 200);
     }
 
     public function destroy($id)
     {
         $cotizacion = Cotizacion::find($id);
-        if (!$cotizacion) return response()->json(['mensaje' => 'No encontrada'], 404);
+
+        if (!$cotizacion) {
+            return response()->json(['mensaje' => 'No encontrada'], 404);
+        }
 
         $cotizacion->delete();
+
         return response()->json(['mensaje' => 'Cotización eliminada'], 200);
     }
 }

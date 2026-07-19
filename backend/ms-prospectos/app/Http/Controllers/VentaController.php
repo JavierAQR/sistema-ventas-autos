@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vehiculo;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 
@@ -20,7 +21,7 @@ class VentaController extends Controller
     {
         $data = $request->validate([
             'prospecto_id'   => 'required|exists:prospectos,id',
-            'vendedor_id' => 'required|exists:vendedores,id',
+            'vendedor_id'    => 'required|exists:vendedores,id',
             'vehiculo_id'    => 'required|exists:vehiculos,id',
             'monto_venta'    => 'required|numeric|min:0',
             'estado'         => 'required|in:realizada,fallida',
@@ -35,13 +36,22 @@ class VentaController extends Controller
 
         if ($data['estado'] === 'realizada') {
             $data['motivo_perdida'] = null;
+
+            // Solo valida stock si la venta es 'realizada' (una venta 'fallida' no consume stock)
+            $vehiculo = Vehiculo::find($data['vehiculo_id']);
+
+            if (!$vehiculo->tieneStockDisponible()) {
+                return response()->json([
+                    'mensaje' => 'No se puede registrar la venta: el vehículo no tiene stock disponible.'
+                ], 422);
+            }
         }
 
         $venta = Venta::create($data);
 
         return response()->json([
             'mensaje' => 'Venta registrada correctamente.',
-            'venta' => $venta
+            'venta' => $venta->fresh(['prospecto', 'vehiculo', 'seguro'])
         ], 201);
     }
 
@@ -50,9 +60,7 @@ class VentaController extends Controller
         $venta = Venta::find($id);
 
         if (!$venta) {
-            return response()->json([
-                'mensaje' => 'Venta no encontrada.'
-            ], 404);
+            return response()->json(['mensaje' => 'Venta no encontrada.'], 404);
         }
 
         $data = $request->validate([
@@ -64,7 +72,6 @@ class VentaController extends Controller
             'motivo_perdida' => 'nullable|string'
         ]);
 
-        // Determinar el estado final (el nuevo si viene, o el actual si no)
         $estadoFinal = $data['estado'] ?? $venta->estado;
 
         if ($estadoFinal === 'fallida') {
@@ -81,6 +88,17 @@ class VentaController extends Controller
 
         if ($estadoFinal === 'realizada') {
             $data['motivo_perdida'] = null;
+
+            // Si estaba 'fallida' y pasa a 'realizada', valida que haya stock (sin contar esta misma venta)
+            if ($venta->estado !== 'realizada') {
+                $vehiculo = Vehiculo::find($data['vehiculo_id'] ?? $venta->vehiculo_id);
+
+                if (!$vehiculo->tieneStockDisponible()) {
+                    return response()->json([
+                        'mensaje' => 'No se puede marcar como realizada: el vehículo no tiene stock disponible.'
+                    ], 422);
+                }
+            }
         }
 
         $venta->update($data);
