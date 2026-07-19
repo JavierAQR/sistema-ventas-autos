@@ -128,10 +128,19 @@
             <input
               v-model.number="formulario.stock"
               type="number"
+              :min="ventasRealizadasVehiculo"
               placeholder="Stock"
               class="w-full border p-2 rounded"
               required
             />
+
+            <p
+              v-if="modoEdicion && ventasRealizadasVehiculo > 0"
+              class="text-xs text-gray-500"
+            >
+              Stock mínimo permitido: {{ ventasRealizadasVehiculo }} (ventas ya
+              realizadas)
+            </p>
 
             <div class="flex justify-end gap-3 pt-4">
               <button
@@ -154,7 +163,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import api from "../services/api";
 import Sidebar from "@/components/Sidebar.vue";
@@ -223,14 +232,23 @@ const guardarVehiculo = async () => {
     }
 
     mostrarModal.value = false;
-
     await cargarVehiculos();
   } catch (error) {
     console.error(error);
-
-    alert("Error guardando vehículo");
+    alert(error.response?.data?.mensaje || "Error guardando vehículo");
   }
 };
+
+const ventasRealizadasVehiculo = computed(() => {
+  if (
+    !modoEdicion.value ||
+    formulario.value.stock == null ||
+    formulario.value.stock_disponible == null
+  ) {
+    return 0;
+  }
+  return formulario.value.stock - formulario.value.stock_disponible;
+});
 
 const eliminarVehiculo = async (id) => {
   if (!confirm("¿Eliminar vehículo?")) return;
