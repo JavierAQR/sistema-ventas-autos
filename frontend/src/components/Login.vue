@@ -1,52 +1,119 @@
 <template>
-  <div class="login-container">
-    <h2>Sistema de Ventas - Login</h2>
-    <form @submit.prevent="iniciarSesion">
-      <input v-model="email" type="email" placeholder="Correo" required />
-      <input v-model="password" type="password" placeholder="Contraseña" required />
-      <button type="submit">Entrar</button>
-    </form>
+  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
+
+      <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">
+        Sistema de Ventas - Login
+      </h2>
+
+      <form 
+        @submit.prevent="iniciarSesion"
+        class="space-y-4"
+      >
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Correo
+          </label>
+
+          <input
+            v-model="email"
+            type="email"
+            placeholder="Correo"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Contraseña
+          </label>
+
+          <input
+            v-model="password"
+            type="password"
+            placeholder="Contraseña"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+
+        <button
+          type="submit"
+          :disabled="cargando"
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+        >
+          {{ cargando ? 'Ingresando...' : 'Entrar' }}
+        </button>
+
+
+        <p
+          v-if="error"
+          class="text-red-600 text-sm text-center"
+        >
+          {{ error }}
+        </p>
+
+      </form>
+
+    </div>
+
   </div>
 </template>
 
+
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router'; // 1. Importamos el router
 
-const router = useRouter(); // 2. Inicializamos el router
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../services/api'
 
-const email = ref('carlos@autos.com');
-const password = ref('password');
+const router = useRouter()
+
+const email = ref('javier@test.com')
+const password = ref('12345678')
+
+const error = ref('')
+const cargando = ref(false)
 
 const iniciarSesion = async () => {
+
+  error.value = ''
+  cargando.value = true
+
   try {
-    const respuesta = await fetch('http://127.0.0.1:8001/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ email: email.value, password: password.value })
-    });
 
-    const datos = await respuesta.json();
-    
-    if (respuesta.ok) {
-      // 3. Guardamos ambos datos (token y los datos del vendedor)
-      localStorage.setItem('token', datos.access_token);
-      localStorage.setItem('vendedor_data', JSON.stringify({ nombre: datos.nombre || 'Vendedor' }));
+    const respuesta = await api.post('/login', {
+      email: email.value,
+      password: password.value
+    })
 
-      // 4. Redirección automática
-      router.push('/dashboard');
-    } else {
-      alert('Error: ' + (datos.mensaje || 'Credenciales inválidas'));
-    }
-  } catch (error) {
-    console.error('Error de conexión:', error);
-    alert('No se pudo conectar al servidor.');
+    const datos = respuesta.data
+
+    localStorage.setItem(
+      'token',
+      datos.access_token
+    )
+
+    localStorage.setItem(
+      'vendedor_data',
+      JSON.stringify(datos.vendedor)
+    )
+
+    router.push('/dashboard')
+
+  } catch (e) {
+    console.error(e)
+    error.value =
+      e.response?.data?.mensaje ||
+      'Credenciales inválidas'
+  } finally {
+    cargando.value = false
   }
-};
-</script>
+}
 
-<style scoped>
-.login-container { max-width: 300px; margin: 50px auto; display: flex; flex-direction: column; gap: 10px; }
-input { padding: 10px; }
-button { padding: 10px; background: #2c3e50; color: white; cursor: pointer; }
-</style>
+</script>
