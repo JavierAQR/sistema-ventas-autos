@@ -14,6 +14,14 @@
       </router-link>
 
       <router-link
+        to="/prospectos"
+        active-class="bg-slate-700 border-l-4 border-blue-500"
+        class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
+      >
+        🧑‍💼 Prospectos
+      </router-link>
+
+      <router-link
         to="/vehiculos"
         active-class="bg-slate-700 border-l-4 border-blue-500"
         class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
@@ -36,7 +44,7 @@
       >
         💰 Ventas
       </router-link>
-      
+
       <router-link
         to="/seguros"
         active-class="bg-slate-700 border-l-4 border-blue-500"
