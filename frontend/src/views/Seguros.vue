@@ -1,54 +1,7 @@
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col">
-      <div class="p-5 text-center border-b border-slate-700">
-        <h2 class="text-xl font-bold">🚗 AutoVentas</h2>
-      </div>
-
-      <nav class="flex-1 py-5 flex flex-col">
-        <router-link
-          to="/dashboard"
-          active-class="bg-slate-700 border-l-4 border-blue-500"
-          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
-        >
-          📊 Panel Principal
-        </router-link>
-
-        <router-link
-          to="/vehiculos"
-          active-class="bg-slate-700 border-l-4 border-blue-500"
-          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
-        >
-          🚙 Mis Vehículos
-        </router-link>
-
-        <router-link
-          to="/cotizaciones"
-          active-class="bg-slate-700 border-l-4 border-blue-500"
-          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
-        >
-          📋 Cotizaciones
-        </router-link>
-
-        <router-link
-          to="/seguros"
-          active-class="bg-slate-700 border-l-4 border-blue-500"
-          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
-        >
-          🛡️ Seguros
-        </router-link>
-      </nav>
-
-      <div class="p-5">
-        <button
-          @click="cerrarSesion"
-          class="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg transition"
-        >
-          🚪 Cerrar Sesión
-        </button>
-      </div>
-    </aside>
+    <sidebar />
 
     <!-- Contenido -->
     <main class="flex-1 p-8 overflow-y-auto">
@@ -144,10 +97,19 @@
                   </span>
                 </td>
 
-                <td class="p-3">
+                <td class="p-3 flex gap-3">
+                  <button
+                    @click="abrirModalEditar(seguro)"
+                    class="text-blue-600 hover:text-blue-800 text-xl"
+                    title="Editar"
+                  >
+                    ✏️
+                  </button>
+
                   <button
                     @click="eliminarSeguro(seguro.id)"
                     class="text-red-600 hover:text-red-800 text-xl"
+                    title="Eliminar"
                   >
                     🗑️
                   </button>
@@ -165,8 +127,6 @@
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
       >
         <div class="bg-white rounded-xl shadow-xl p-6 w-[450px]">
-          <h3 class="text-xl font-bold mb-5">Registrar Seguro</h3>
-
           <form @submit.prevent="guardarSeguro" class="space-y-4">
             <div>
               <label class="block text-sm font-semibold mb-1">
@@ -283,7 +243,7 @@
             <div class="flex justify-end gap-3 pt-3">
               <button
                 type="button"
-                @click="mostrarModal = false"
+                @click="cerrarModal"
                 class="px-4 py-2 border rounded-lg"
               >
                 Cancelar
@@ -294,7 +254,13 @@
                 :disabled="cargando"
                 class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
               >
-                {{ cargando ? "Guardando..." : "Guardar Seguro" }}
+                {{
+                  cargando
+                    ? "Guardando..."
+                    : modoEdicion
+                      ? "Actualizar Seguro"
+                      : "Guardar Seguro"
+                }}
               </button>
             </div>
           </form>
@@ -308,6 +274,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import Sidebar from "@/components/Sidebar.vue";
 
 const router = useRouter();
 
@@ -333,6 +300,8 @@ const ventas = ref([]);
 
 const mostrarModal = ref(false);
 const cargando = ref(false);
+const modoEdicion = ref(false);
+const seguroEditandoId = ref(null);
 
 const formulario = ref({
   venta_id: "",
@@ -366,7 +335,6 @@ const cargarSeguros = async () => {
     const response = await api.get("/seguros");
 
     seguros.value = response.data;
-
   } catch (error) {
     console.error("Error cargando seguros:", error);
   }
@@ -383,6 +351,9 @@ const cargarVentas = async () => {
 };
 
 const abrirModalNuevo = () => {
+  modoEdicion.value = false;
+  seguroEditandoId.value = null;
+
   formulario.value = {
     venta_id: "",
     aseguradora: "",
@@ -396,41 +367,56 @@ const abrirModalNuevo = () => {
   mostrarModal.value = true;
 };
 
+const abrirModalEditar = (seguro) => {
+  modoEdicion.value = true;
+  seguroEditandoId.value = seguro.id;
+
+  formulario.value = {
+    venta_id: seguro.venta_id,
+    aseguradora: seguro.aseguradora,
+    tipo_seguro: seguro.tipo_seguro,
+    prima_esperada: seguro.prima_esperada,
+    prima_real: seguro.prima_real,
+    estado: seguro.estado,
+    observaciones: seguro.observaciones,
+  };
+
+  mostrarModal.value = true;
+};
+
 const guardarSeguro = async () => {
   cargando.value = true;
 
   try {
     const data = {
       venta_id: formulario.value.venta_id,
-
       aseguradora: formulario.value.aseguradora,
-
       tipo_seguro: formulario.value.tipo_seguro,
-
       prima_esperada: formulario.value.prima_esperada,
-
       prima_real:
         formulario.value.estado === "vendido"
           ? formulario.value.prima_real
           : null,
-
       estado: formulario.value.estado,
-
       observaciones: formulario.value.observaciones,
     };
 
-    await api.post("/seguros", data);
+    if (modoEdicion.value) {
+      await api.put(`/seguros/${seguroEditandoId.value}`, data);
+    } else {
+      await api.post("/seguros", data);
+    }
 
     mostrarModal.value = false;
 
     await cargarSeguros();
   } catch (error) {
-    console.error("Error registrando seguro:", error);
+    console.error("Error guardando seguro:", error);
 
     if (error.response?.data?.message) {
       alert(error.response.data.message);
     } else {
-      alert("Error al registrar seguro");
+      alert("Error al guardar seguro");
     }
   } finally {
     cargando.value = false;
@@ -453,11 +439,9 @@ const eliminarSeguro = async (id) => {
   }
 };
 
-const cerrarSesion = () => {
-  localStorage.removeItem("token");
-
-  localStorage.removeItem("vendedor_data");
-
-  router.push("/login");
+const cerrarModal = () => {
+  mostrarModal.value = false;
+  modoEdicion.value = false;
+  seguroEditandoId.value = null;
 };
 </script>

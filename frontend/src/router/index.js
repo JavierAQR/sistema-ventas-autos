@@ -4,6 +4,7 @@ import Dashboard from '../views/Dashboard.vue'
 import Vehiculos from '../views/Vehiculos.vue'
 import Cotizaciones from '../views/Cotizaciones.vue'
 import Seguros from '../views/Seguros.vue'
+import Ventas from '@/views/Ventas.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,10 @@ const router = createRouter({
       path: '/seguros', 
       name: 'seguros', 
       component: Seguros 
+    },
+    {
+      path: '/ventas',
+      component: Ventas
     },
     {
       path: '/', // Opcional: redirigir a dashboard si entran a la raíz

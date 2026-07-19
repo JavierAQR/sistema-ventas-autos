@@ -1,48 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex">
     <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col">
-      <div class="p-6 border-b border-slate-700">
-        <h2 class="text-xl font-bold">🚗 AutoVentas</h2>
-      </div>
-
-      <nav class="flex-1 p-4 space-y-2">
-        <router-link
-          to="/dashboard"
-          class="block px-4 py-3 rounded-lg hover:bg-slate-700"
-        >
-          📊 Dashboard
-        </router-link>
-
-        <router-link
-          to="/vehiculos"
-          class="block px-4 py-3 rounded-lg hover:bg-slate-700"
-        >
-          🚙 Vehículos
-        </router-link>
-
-        <router-link
-          to="/cotizaciones"
-          class="block px-4 py-3 rounded-lg hover:bg-slate-700"
-        >
-          📋 Cotizaciones
-        </router-link>
-
-        <router-link
-          to="/seguros"
-          class="block px-4 py-3 rounded-lg hover:bg-slate-700"
-        >
-          🛡️ Seguros
-        </router-link>
-      </nav>
-
-      <button
-        @click="cerrarSesion"
-        class="m-4 bg-red-600 hover:bg-red-700 py-2 rounded-lg"
-      >
-        🚪 Cerrar sesión
-      </button>
-    </aside>
+    <sidebar />
 
     <!-- Contenido -->
     <main class="flex-1 p-8 overflow-auto">
@@ -185,6 +144,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import Sidebar from "@/components/Sidebar.vue";
 
 const router = useRouter();
 

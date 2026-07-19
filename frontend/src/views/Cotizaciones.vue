@@ -1,54 +1,7 @@
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col">
-      <div class="p-5 text-center border-b border-slate-700">
-        <h2 class="text-xl font-bold">🚗 AutoVentas</h2>
-      </div>
-
-      <nav class="flex-1 py-5 flex flex-col">
-        <router-link
-          to="/dashboard"
-          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
-          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
-        >
-          📊 Panel Principal
-        </router-link>
-
-        <router-link
-          to="/vehiculos"
-          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
-          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
-        >
-          🚙 Mis Vehículos
-        </router-link>
-
-        <router-link
-          to="/cotizaciones"
-          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
-          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
-        >
-          📋 Cotizaciones
-        </router-link>
-
-        <router-link
-          to="/seguros"
-          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
-          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
-        >
-          🛡️ Seguros
-        </router-link>
-      </nav>
-
-      <div class="p-5">
-        <button
-          @click="cerrarSesion"
-          class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg transition font-semibold"
-        >
-          🚪 Cerrar Sesión
-        </button>
-      </div>
-    </aside>
+    <sidebar />
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 p-8 overflow-y-auto">
@@ -292,6 +245,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import Sidebar from "@/components/Sidebar.vue";
 
 const router = useRouter();
 
@@ -548,19 +502,5 @@ const eliminarCotizacion = async (id) => {
   } catch (error) {
     console.error("Error eliminando:", error);
   }
-};
-
-/*
-|--------------------------------------------------------------------------
-| Logout
-|--------------------------------------------------------------------------
-*/
-
-const cerrarSesion = () => {
-  localStorage.removeItem("token");
-
-  localStorage.removeItem("vendedor_data");
-
-  router.push("/login");
 };
 </script>

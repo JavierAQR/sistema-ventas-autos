@@ -1,50 +1,7 @@
 <template>
   <div class="flex h-screen bg-gray-100">
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-gray-900 text-white flex flex-col">
-      <div class="p-5 text-center border-b border-gray-700">
-        <h2 class="text-xl font-bold">🚗 AutoVentas</h2>
-      </div>
-
-      <nav class="flex-1 py-5">
-        <router-link
-          to="/dashboard"
-          class="block px-5 py-3 text-gray-300 hover:bg-gray-700"
-        >
-          📊 Panel Principal
-        </router-link>
-
-        <router-link
-          to="/vehiculos"
-          class="block px-5 py-3 bg-gray-700 border-l-4 border-blue-500"
-        >
-          🚙 Mis Vehículos
-        </router-link>
-
-        <router-link
-          to="/cotizaciones"
-          class="block px-5 py-3 text-gray-300 hover:bg-gray-700"
-        >
-          📋 Cotizaciones
-        </router-link>
-
-        <router-link
-          to="/seguros"
-          class="block px-5 py-3 text-gray-300 hover:bg-gray-700"
-        >
-          🛡️ Seguros
-        </router-link>
-      </nav>
-
-      <div class="p-5">
-        <button
-          @click="cerrarSesion"
-          class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg"
-        >
-          🚪 Cerrar Sesión
-        </button>
-      </div>
-    </aside>
+    <sidebar />
 
     <!-- CONTENIDO -->
 
@@ -212,6 +169,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "../services/api";
+import Sidebar from "@/components/Sidebar.vue";
 
 const router = useRouter();
 
@@ -294,11 +252,5 @@ const eliminarVehiculo = async (id) => {
   cargarVehiculos();
 };
 
-const cerrarSesion = () => {
-  localStorage.removeItem("token");
 
-  localStorage.removeItem("vendedor_data");
-
-  router.push("/login");
-};
 </script>
