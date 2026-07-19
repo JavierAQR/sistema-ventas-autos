@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vehiculo;
 use App\Models\Venta;
+use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 
 class VentaController extends Controller
@@ -37,7 +37,6 @@ class VentaController extends Controller
         if ($data['estado'] === 'realizada') {
             $data['motivo_perdida'] = null;
 
-            // Solo valida stock si la venta es 'realizada' (una venta 'fallida' no consume stock)
             $vehiculo = Vehiculo::find($data['vehiculo_id']);
 
             if (!$vehiculo->tieneStockDisponible()) {
@@ -48,6 +47,10 @@ class VentaController extends Controller
         }
 
         $venta = Venta::create($data);
+
+        if ($venta->estado === 'realizada') {
+            $venta->prospecto?->update(['estado' => 'cierre']);
+        }
 
         return response()->json([
             'mensaje' => 'Venta registrada correctamente.',
@@ -73,6 +76,7 @@ class VentaController extends Controller
         ]);
 
         $estadoFinal = $data['estado'] ?? $venta->estado;
+        $estadoAnterior = $venta->estado;
 
         if ($estadoFinal === 'fallida') {
             $motivoFinal = $data['motivo_perdida'] ?? $venta->motivo_perdida;
@@ -89,8 +93,7 @@ class VentaController extends Controller
         if ($estadoFinal === 'realizada') {
             $data['motivo_perdida'] = null;
 
-            // Si estaba 'fallida' y pasa a 'realizada', valida que haya stock (sin contar esta misma venta)
-            if ($venta->estado !== 'realizada') {
+            if ($estadoAnterior !== 'realizada') {
                 $vehiculo = Vehiculo::find($data['vehiculo_id'] ?? $venta->vehiculo_id);
 
                 if (!$vehiculo->tieneStockDisponible()) {
@@ -103,6 +106,37 @@ class VentaController extends Controller
 
         $venta->update($data);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Prospecto pasa a 'cierre' cuando la venta TRANSICIONA a 'realizada'
+        |--------------------------------------------------------------------------
+        */
+        if ($estadoFinal === 'realizada' && $estadoAnterior !== 'realizada') {
+            $venta->prospecto?->update(['estado' => 'cierre']);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETROCESO: si una venta 'realizada' pasa a 'fallida', el prospecto
+        | retrocede a 'negociacion' -- pero solo si no tiene OTRA venta
+        | realizada que justifique mantenerlo en 'cierre'.
+        |--------------------------------------------------------------------------
+        */
+        if ($estadoFinal === 'fallida' && $estadoAnterior === 'realizada') {
+            $prospecto = $venta->prospecto;
+
+            if ($prospecto && $prospecto->estado === 'cierre') {
+                $tieneOtraVentaRealizada = $prospecto->ventas()
+                    ->where('id', '!=', $venta->id)
+                    ->where('estado', 'realizada')
+                    ->exists();
+
+                if (!$tieneOtraVentaRealizada) {
+                    $prospecto->update(['estado' => 'negociacion']);
+                }
+            }
+        }
+
         return response()->json([
             'mensaje' => 'Venta actualizada correctamente.',
             'venta' => $venta->fresh(['prospecto', 'vehiculo', 'seguro'])
@@ -114,15 +148,11 @@ class VentaController extends Controller
         $venta = Venta::find($id);
 
         if (!$venta) {
-            return response()->json([
-                'mensaje' => 'Venta no encontrada.'
-            ], 404);
+            return response()->json(['mensaje' => 'Venta no encontrada.'], 404);
         }
 
         $venta->delete();
 
-        return response()->json([
-            'mensaje' => 'Venta eliminada correctamente.'
-        ], 200);
+        return response()->json(['mensaje' => 'Venta eliminada correctamente.'], 200);
     }
 }

@@ -38,6 +38,12 @@ class CotizacionController extends Controller
 
         $cotizacion = Cotizacion::create($data);
 
+        $prospecto = $cotizacion->prospecto;
+
+        if ($prospecto && in_array($prospecto->estado, ['prospeccion', 'calificacion'])) {
+            $prospecto->update(['estado' => 'negociacion']);
+        }
+
         return response()->json([
             'mensaje' => 'Cotización registrada correctamente.',
             'cotizacion' => $cotizacion->fresh(['prospecto', 'vehiculo'])
@@ -63,8 +69,8 @@ class CotizacionController extends Controller
         ]);
 
         $seAprueba = isset($data['estado']) && $data['estado'] === 'aprobada';
+        $seRechaza = isset($data['estado']) && $data['estado'] === 'rechazada';
 
-        // Validar stock ANTES de guardar cualquier cambio, si se está aprobando
         if ($seAprueba) {
             $vehiculoId = $data['vehiculo_id'] ?? $cotizacion->vehiculo_id;
             $vehiculo = Vehiculo::find($vehiculoId);
@@ -80,7 +86,7 @@ class CotizacionController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | CONVERSIÓN AUTOMÁTICA A VENTA
+        | CONVERSIÓN AUTOMÁTICA A VENTA + prospecto pasa a 'cierre'
         |--------------------------------------------------------------------------
         */
 
@@ -96,6 +102,34 @@ class CotizacionController extends Controller
                     'estado'      => 'realizada'
                 ]
             );
+
+            $prospecto = $cotizacion->prospecto;
+
+            if ($prospecto) {
+                $prospecto->update(['estado' => 'cierre']);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETROCESO AUTOMÁTICO: si se rechaza y el prospecto no tiene otras
+        | cotizaciones activas (pendiente o aprobada), regresa a 'calificacion'.
+        |--------------------------------------------------------------------------
+        */
+
+        if ($seRechaza) {
+            $prospecto = $cotizacion->prospecto;
+
+            if ($prospecto && $prospecto->estado === 'negociacion') {
+                $tieneOtrasCotizacionesActivas = $prospecto->cotizaciones()
+                    ->where('id', '!=', $cotizacion->id)
+                    ->whereIn('estado', ['pendiente', 'aprobada'])
+                    ->exists();
+
+                if (!$tieneOtrasCotizacionesActivas) {
+                    $prospecto->update(['estado' => 'calificacion']);
+                }
+            }
         }
 
         return response()->json([
