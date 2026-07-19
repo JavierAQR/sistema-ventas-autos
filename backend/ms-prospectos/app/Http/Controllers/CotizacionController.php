@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cotizacion;
+use App\Models\Venta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CotizacionController extends Controller
 {
@@ -16,12 +18,6 @@ class CotizacionController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'prospecto_id' => 'required|exists:prospectos,id',
-            'vehiculo_id' => 'required|exists:vehiculos,id',
-            'precio_final' => 'required|numeric'
-        ]);
-
         $data = $request->validate([
             'prospecto_id' => 'required|exists:prospectos,id',
             'vehiculo_id' => 'required|exists:vehiculos,id',
@@ -32,15 +28,23 @@ class CotizacionController extends Controller
 
         $cotizacion = Cotizacion::create($data);
 
-        return response()->json(['mensaje' => 'Cotización generada', 'cotizacion' => $cotizacion], 201);
+        return response()->json([
+            'mensaje' => 'Cotización generada',
+            'cotizacion' => $cotizacion
+        ], 201);
     }
 
     public function update(Request $request, $id)
     {
         $cotizacion = Cotizacion::find($id);
-        if (!$cotizacion) return response()->json(['mensaje' => 'No encontrada'], 404);
 
-        $cotizacion->update($request->all());$data = $request->validate([
+        if (!$cotizacion) {
+            return response()->json([
+                'mensaje' => 'Cotización no encontrada'
+            ], 404);
+        }
+
+        $data = $request->validate([
             'prospecto_id' => 'sometimes|exists:prospectos,id',
             'vehiculo_id' => 'sometimes|exists:vehiculos,id',
             'precio_final' => 'sometimes|numeric|min:0',
@@ -48,9 +52,36 @@ class CotizacionController extends Controller
             'observaciones' => 'nullable|string'
         ]);
 
+        // Actualizamos la cotización
         $cotizacion->update($data);
-        
-        return response()->json(['mensaje' => 'Cotización actualizada', 'cotizacion' => $cotizacion], 200);
+
+        /*
+        |--------------------------------------------------------------------------
+        | CONVERSIÓN AUTOMÁTICA A VENTA
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['estado']) &&
+            $data['estado'] === 'aprobada'
+        ) {
+
+            Venta::firstOrCreate(
+            [
+                'prospecto_id'=>$cotizacion->prospecto_id,
+                'vehiculo_id'=>$cotizacion->vehiculo_id,
+            ],
+            [
+                'vendedor_id'=>Auth::id(),
+                'monto_venta'=>$cotizacion->precio_final,
+                'estado'=>'realizada'
+            ]);
+        }
+
+        return response()->json([
+            'mensaje' => 'Cotización actualizada correctamente',
+            'cotizacion' => $cotizacion
+        ], 200);
     }
 
     public function destroy($id)

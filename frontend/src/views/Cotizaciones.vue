@@ -1,55 +1,164 @@
 <template>
-  <div class="dashboard-layout">
-    <aside class="sidebar">
-      <div class="brand"><h2>🚗 AutoVentas</h2></div>
-      <nav class="menu">
-        <router-link to="/dashboard" active-class="active">📊 Panel Principal</router-link>
-        <router-link to="/vehiculos" active-class="active">🚙 Mis Vehículos</router-link>
-        <router-link to="/cotizaciones" active-class="active">📋 Cotizaciones</router-link>
-        <router-link to="/seguros" active-class="active">🛡️ Seguros</router-link>
+  <div class="flex h-screen bg-gray-100">
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col">
+      <div class="p-5 text-center border-b border-slate-700">
+        <h2 class="text-xl font-bold">🚗 AutoVentas</h2>
+      </div>
+
+      <nav class="flex-1 py-5 flex flex-col">
+        <router-link
+          to="/dashboard"
+          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
+          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
+        >
+          📊 Panel Principal
+        </router-link>
+
+        <router-link
+          to="/vehiculos"
+          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
+          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
+        >
+          🚙 Mis Vehículos
+        </router-link>
+
+        <router-link
+          to="/cotizaciones"
+          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
+          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
+        >
+          📋 Cotizaciones
+        </router-link>
+
+        <router-link
+          to="/seguros"
+          class="px-5 py-3 text-slate-300 hover:bg-slate-800 hover:text-white transition"
+          active-class="bg-slate-800 text-white border-l-4 border-blue-500"
+        >
+          🛡️ Seguros
+        </router-link>
       </nav>
-      <div class="sidebar-footer">
-        <button @click="cerrarSesion" class="btn-logout">🚪 Cerrar Sesión</button>
+
+      <div class="p-5">
+        <button
+          @click="cerrarSesion"
+          class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg transition font-semibold"
+        >
+          🚪 Cerrar Sesión
+        </button>
       </div>
     </aside>
 
-    <main class="main-content">
-      <header class="topbar">
-        <div class="welcome-text">
-          <h1>Gestión de Cotizaciones 📋</h1>
-          <p>Cierra ventas asignando vehículos a tus prospectos.</p>
-        </div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 p-8 overflow-y-auto">
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">
+          Gestión de Cotizaciones 📋
+        </h1>
+
+        <p class="text-gray-500 mt-2">
+          Administra las negociaciones y propuestas comerciales.
+        </p>
       </header>
 
-      <section class="recent-prospects">
-        <div class="section-header">
-          <h2>Cotizaciones Generadas</h2>
-          <button @click="abrirModalNuevo" class="btn-primary">+ Nueva Cotización</button>
+      <!-- CARD PRINCIPAL -->
+      <section class="bg-white rounded-xl shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-700">
+            Cotizaciones Generadas
+          </h2>
+
+          <button
+            @click="abrirModalNuevo"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition"
+          >
+            + Nueva Cotización
+          </button>
         </div>
-        
-        <div class="table-responsive">
-          <table>
+
+        <!-- TABLA -->
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
             <thead>
-              <tr>
-                <th>Prospecto</th>
-                <th>Vehículo</th>
-                <th>Precio Final</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+              <tr class="border-b bg-gray-50">
+                <th class="p-4">Prospecto</th>
+
+                <th class="p-4">Vehículo</th>
+
+                <th class="p-4">Precio Final</th>
+
+                <th class="p-4">Estado</th>
+
+                <th class="p-4">Acciones</th>
               </tr>
             </thead>
+
             <tbody>
               <tr v-if="cotizaciones.length === 0">
-                <td colspan="5" class="text-center">No hay cotizaciones registradas aún.</td>
+                <td colspan="5" class="text-center py-6 text-gray-500">
+                  No hay cotizaciones registradas aún.
+                </td>
               </tr>
-              <tr v-for="cotizacion in cotizaciones" :key="cotizacion.id">
-                <td>{{ cotizacion.prospecto?.nombre }} {{ cotizacion.prospecto?.apellido }}</td>
-                <td>{{ cotizacion.vehiculo?.marca }} {{ cotizacion.vehiculo?.modelo }}</td>
-                <td>S/ {{ cotizacion.precio_final }}</td>
-                <td><span class="badge" :class="cotizacion.estado">{{ cotizacion.estado }}</span></td>
-                <td>
-                  <button @click="abrirModalEditar(cotizacion)" class="btn-icon edit">✏️</button>
-                  <button @click="eliminarCotizacion(cotizacion.id)" class="btn-icon delete">🗑️</button>
+
+              <tr
+                v-for="cotizacion in cotizaciones"
+                :key="cotizacion.id"
+                class="border-b hover:bg-gray-50"
+              >
+                <td class="p-4">
+                  <p class="font-semibold">
+                    {{ cotizacion.prospecto?.nombre }}
+                    {{ cotizacion.prospecto?.apellido }}
+                  </p>
+
+                  <p class="text-sm text-gray-500">
+                    {{ cotizacion.prospecto?.email }}
+                  </p>
+                </td>
+
+                <td class="p-4">
+                  {{ cotizacion.vehiculo?.marca }}
+                  {{ cotizacion.vehiculo?.modelo }}
+                </td>
+
+                <td class="p-4 font-semibold">
+                  S/ {{ cotizacion.precio_final }}
+                </td>
+
+                <td class="p-4">
+                  <span
+                    class="px-3 py-1 rounded-full text-xs font-bold"
+                    :class="{
+                      'bg-yellow-100 text-yellow-700':
+                        cotizacion.estado === 'pendiente',
+
+                      'bg-green-100 text-green-700':
+                        cotizacion.estado === 'aprobada',
+
+                      'bg-red-100 text-red-700':
+                        cotizacion.estado === 'rechazada',
+                    }"
+                  >
+                    {{ cotizacion.estado }}
+                  </span>
+                </td>
+
+                <td class="p-4 space-x-3">
+                  <button
+                    @click="abrirModalEditar(cotizacion)"
+                    class="text-blue-600 hover:text-blue-800"
+                  >
+                    ✏️
+                  </button>
+
+                  <button
+                    @click="eliminarCotizacion(cotizacion.id)"
+                    class="text-red-600 hover:text-red-800"
+                  >
+                    🗑️
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -57,44 +166,119 @@
         </div>
       </section>
 
-      <div v-if="mostrarModal" class="modal-overlay">
-        <div class="modal">
-          <h3>{{ modoEdicion ? 'Editar Cotización' : 'Generar Nueva Cotización' }}</h3>
-          <form @submit.prevent="guardarCotizacion">
-            
-            <label>Selecciona el Prospecto:</label>
-            <select v-model="formulario.prospecto_id" required>
-              <option value="" disabled>Elige un cliente...</option>
-              <option v-for="prospecto in prospectos" :key="prospecto.id" :value="prospecto.id">
-                {{ prospecto.nombre }} {{ prospecto.apellido }} (Interés: {{ prospecto.vehiculo_interes }})
-              </option>
-            </select>
+      <!-- MODAL -->
 
-            <label>Selecciona el Vehículo:</label>
-            <select v-model="formulario.vehiculo_id" required>
-              <option value="" disabled>Elige un auto del inventario...</option>
-              <option v-for="vehiculo in vehiculos" :key="vehiculo.id" :value="vehiculo.id">
-                {{ vehiculo.marca }} {{ vehiculo.modelo }} - S/ {{ vehiculo.precio }}
-              </option>
-            </select>
+      <div
+        v-if="mostrarModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      >
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+          <h3 class="text-xl font-bold mb-6 text-gray-800">
+            {{ modoEdicion ? "Editar Cotización" : "Generar Nueva Cotización" }}
+          </h3>
 
-            <label>Precio Negociado (S/):</label>
-            <input v-model.number="formulario.precio_final" type="number" step="0.01" placeholder="Ej: 50000" required />
+          <form @submit.prevent="guardarCotizacion" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Prospecto
+              </label>
 
-            <label>Estado de la Negociación:</label>
-            <select v-model="formulario.estado" required>
-              <option value="pendiente">Pendiente</option>
-              <option value="aprobada">Aprobada</option>
-              <option value="rechazada">Rechazada</option>
-            </select>
+              <select
+                v-model="formulario.prospecto_id"
+                required
+                class="w-full border rounded-lg p-2"
+              >
+                <option value="" disabled>Selecciona un cliente</option>
 
-            <label>Observaciones (Opcional):</label>
-            <textarea v-model="formulario.observaciones" rows="2" placeholder="Detalles extra..."></textarea>
+                <option
+                  v-for="prospecto in prospectos"
+                  :key="prospecto.id"
+                  :value="prospecto.id"
+                >
+                  {{ prospecto.nombre }}
+                  {{ prospecto.apellido }}
+                </option>
+              </select>
+            </div>
 
-            <div class="modal-actions">
-              <button type="button" @click="mostrarModal = false" class="btn-cancel">Cancelar</button>
-              <button type="submit" class="btn-primary" :disabled="cargando">
-                {{ cargando ? 'Guardando...' : 'Guardar Cotización' }}
+            <div>
+              <label class="block text-sm font-semibold mb-1"> Vehículo </label>
+
+              <select
+                v-model="formulario.vehiculo_id"
+                required
+                class="w-full border rounded-lg p-2"
+              >
+                <option value="" disabled>Selecciona vehículo</option>
+
+                <option
+                  v-for="vehiculo in vehiculos"
+                  :key="vehiculo.id"
+                  :value="vehiculo.id"
+                >
+                  {{ vehiculo.marca }}
+                  {{ vehiculo.modelo }}
+                  - S/ {{ vehiculo.precio }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Precio negociado
+              </label>
+
+              <input
+                v-model.number="formulario.precio_final"
+                type="number"
+                step="0.01"
+                required
+                class="w-full border rounded-lg p-2"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1"> Estado </label>
+
+              <select
+                v-model="formulario.estado"
+                class="w-full border rounded-lg p-2"
+              >
+                <option value="pendiente">Pendiente</option>
+
+                <option value="aprobada">Aprobada</option>
+
+                <option value="rechazada">Rechazada</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Observaciones
+              </label>
+
+              <textarea
+                v-model="formulario.observaciones"
+                rows="3"
+                class="w-full border rounded-lg p-2"
+              ></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                @click="mostrarModal = false"
+                class="px-4 py-2 border rounded-lg"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                :disabled="cargando"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
+              >
+                {{ cargando ? "Guardando..." : "Guardar" }}
               </button>
             </div>
           </form>
@@ -105,163 +289,278 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'; // <-- Importamos 'watch' para observar cambios
-import { useRouter } from 'vue-router';
+import { ref, onMounted, watch } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
 
 const router = useRouter();
+
+/*
+|--------------------------------------------------------------------------
+| Axios configurado
+|--------------------------------------------------------------------------
+*/
+
+const api = axios.create({
+  baseURL: "http://127.0.0.1:8001/api",
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  config.headers.Accept = "application/json";
+
+  return config;
+});
+
+/*
+|--------------------------------------------------------------------------
+| Variables
+|--------------------------------------------------------------------------
+*/
+
 const cotizaciones = ref([]);
+
 const prospectos = ref([]);
+
 const vehiculos = ref([]);
 
 const mostrarModal = ref(false);
+
 const cargando = ref(false);
+
 const modoEdicion = ref(false);
 
-const formulario = ref({ id: null, prospecto_id: '', vehiculo_id: '', precio_final: '', estado: 'pendiente', observaciones: '' });
+const formulario = ref({
+  id: null,
 
-// OBSERVADOR (WATCHER): Monitorea la selección del prospecto
-watch(() => formulario.value.prospecto_id, (nuevoId) => {
-  // Solo queremos autocompletar si estamos creando una cotización nueva (no al editar una existente)
-  if (modoEdicion.value || !nuevoId) return;
+  prospecto_id: "",
 
-  // 1. Buscamos el prospecto seleccionado en la lista cargada
-  const prospectoSeleccionado = prospectos.value.find(p => p.id === nuevoId);
-  
-  if (prospectoSeleccionado && prospectoSeleccionado.vehiculo_interes) {
-    // 2. Buscamos en nuestro catálogo el auto que coincida con su "vehiculo_interes"
-    const vehiculoCoincidente = vehiculos.value.find(v => {
-      const nombreCompletoAuto = `${v.marca} ${v.modelo}`.trim().toLowerCase();
-      return nombreCompletoAuto === prospectoSeleccionado.vehiculo_interes.trim().toLowerCase();
+  vehiculo_id: "",
+
+  precio_final: "",
+
+  estado: "pendiente",
+
+  observaciones: "",
+});
+
+/*
+|--------------------------------------------------------------------------
+| Autocompletar vehículo según prospecto
+|--------------------------------------------------------------------------
+*/
+
+watch(
+  () => formulario.value.prospecto_id,
+
+  (nuevoId) => {
+    if (modoEdicion.value || !nuevoId) {
+      return;
+    }
+
+    const prospectoSeleccionado = prospectos.value.find((p) => p.id == nuevoId);
+
+    if (!prospectoSeleccionado || !prospectoSeleccionado.vehiculo_interes) {
+      return;
+    }
+
+    const vehiculoCoincidente = vehiculos.value.find((v) => {
+      const nombreVehiculo = `${v.marca} ${v.modelo}`.trim().toLowerCase();
+
+      return (
+        nombreVehiculo ===
+        prospectoSeleccionado.vehiculo_interes.trim().toLowerCase()
+      );
     });
 
-    // 3. Si lo encontramos, rellenamos automáticamente el ID y el precio original de lista
     if (vehiculoCoincidente) {
       formulario.value.vehiculo_id = vehiculoCoincidente.id;
+
       formulario.value.precio_final = vehiculoCoincidente.precio;
     } else {
-      // Si no hay coincidencia exacta (por registros antiguos hechos a mano), limpiamos los campos
-      formulario.value.vehiculo_id = '';
-      formulario.value.precio_final = '';
+      formulario.value.vehiculo_id = "";
+
+      formulario.value.precio_final = "";
     }
-  }
-});
+  },
+);
+
+/*
+|--------------------------------------------------------------------------
+| Inicialización
+|--------------------------------------------------------------------------
+*/
 
 onMounted(() => {
-  const data = localStorage.getItem('vendedor_data');
-  if (!data) return router.push('/login');
-  
+  const vendedor = localStorage.getItem("vendedor_data");
+
+  if (!vendedor) {
+    router.push("/login");
+
+    return;
+  }
+
   cargarCotizaciones();
-  cargarListasDesplegables();
+
+  cargarListas();
 });
 
+/*
+|--------------------------------------------------------------------------
+| Obtener cotizaciones
+|--------------------------------------------------------------------------
+*/
+
 const cargarCotizaciones = async () => {
-  const token = localStorage.getItem('token');
-  const res = await fetch('http://127.0.0.1:8001/api/cotizaciones', {
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-  });
-  if (res.ok) cotizaciones.value = await res.json();
+  try {
+    const response = await api.get("/cotizaciones");
+
+    cotizaciones.value = response.data;
+  } catch (error) {
+    console.error("Error cargando cotizaciones:", error);
+  }
 };
 
-const cargarListasDesplegables = async () => {
-  const token = localStorage.getItem('token');
-  const config = { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' } };
-  
-  const [resProspectos, resVehiculos] = await Promise.all([
-    fetch('http://127.0.0.1:8001/api/prospectos', config),
-    fetch('http://127.0.0.1:8001/api/vehiculos', config)
-  ]);
+/*
+|--------------------------------------------------------------------------
+| Obtener prospectos y vehículos
+|--------------------------------------------------------------------------
+*/
 
-  if (resProspectos.ok) prospectos.value = await resProspectos.json();
-  if (resVehiculos.ok) vehiculos.value = await resVehiculos.json();
+const cargarListas = async () => {
+  try {
+    const [prospectosResponse, vehiculosResponse] = await Promise.all([
+      api.get("/prospectos"),
+
+      api.get("/vehiculos"),
+    ]);
+
+    prospectos.value = prospectosResponse.data;
+
+    vehiculos.value = vehiculosResponse.data;
+  } catch (error) {
+    console.error("Error cargando listas:", error);
+  }
 };
+
+/*
+|--------------------------------------------------------------------------
+| Abrir modal nuevo
+|--------------------------------------------------------------------------
+*/
 
 const abrirModalNuevo = () => {
   modoEdicion.value = false;
-  formulario.value = { id: null, prospecto_id: '', vehiculo_id: '', precio_final: '', estado: 'pendiente', observaciones: '' };
+
+  formulario.value = {
+    id: null,
+
+    prospecto_id: "",
+
+    vehiculo_id: "",
+
+    precio_final: "",
+
+    estado: "pendiente",
+
+    observaciones: "",
+  };
+
   mostrarModal.value = true;
 };
+
+/*
+|--------------------------------------------------------------------------
+| Editar
+|--------------------------------------------------------------------------
+*/
 
 const abrirModalEditar = (cotizacion) => {
   modoEdicion.value = true;
-  formulario.value = { ...cotizacion };
+
+  formulario.value = {
+    ...cotizacion,
+
+    prospecto_id: cotizacion.prospecto_id,
+
+    vehiculo_id: cotizacion.vehiculo_id,
+  };
+
   mostrarModal.value = true;
 };
 
+/*
+|--------------------------------------------------------------------------
+| Crear / actualizar
+|--------------------------------------------------------------------------
+*/
+
 const guardarCotizacion = async () => {
   cargando.value = true;
-  const token = localStorage.getItem('token');
-  const url = modoEdicion.value ? `http://127.0.0.1:8001/api/cotizaciones/${formulario.value.id}` : 'http://127.0.0.1:8001/api/cotizaciones';
-  const metodo = modoEdicion.value ? 'PUT' : 'POST';
 
   try {
-    const res = await fetch(url, {
-      method: metodo,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
-      body: JSON.stringify(formulario.value)
-    });
+    if (modoEdicion.value) {
+      await api.put(
+        `/cotizaciones/${formulario.value.id}`,
 
-    if (res.ok) {
-      mostrarModal.value = false;
-      cargarCotizaciones();
+        formulario.value,
+      );
     } else {
-      alert("Hubo un error al guardar.");
+      await api.post(
+        "/cotizaciones",
+
+        formulario.value,
+      );
     }
+
+    mostrarModal.value = false;
+
+    await cargarCotizaciones();
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error guardando cotización:", error);
+
+    alert(error.response?.data?.message || "Error al guardar la cotización");
   } finally {
     cargando.value = false;
   }
 };
 
+/*
+|--------------------------------------------------------------------------
+| Eliminar
+|--------------------------------------------------------------------------
+*/
+
 const eliminarCotizacion = async (id) => {
-  if (!confirm('¿Seguro que deseas eliminar esta cotización?')) return;
-  const token = localStorage.getItem('token');
+  if (!confirm("¿Seguro que deseas eliminar esta cotización?")) {
+    return;
+  }
+
   try {
-    const res = await fetch(`http://127.0.0.1:8001/api/cotizaciones/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-    });
-    if (res.ok) cargarCotizaciones();
+    await api.delete(`/cotizaciones/${id}`);
+
+    cargarCotizaciones();
   } catch (error) {
-    console.error("Error al eliminar:", error);
+    console.error("Error eliminando:", error);
   }
 };
 
+/*
+|--------------------------------------------------------------------------
+| Logout
+|--------------------------------------------------------------------------
+*/
+
 const cerrarSesion = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('vendedor_data');
-  router.push('/login');
+  localStorage.removeItem("token");
+
+  localStorage.removeItem("vendedor_data");
+
+  router.push("/login");
 };
 </script>
-
-<style scoped>
-/* Estilos existentes... */
-.dashboard-layout { display: flex; height: 100vh; background-color: #f4f7f6; font-family: sans-serif; }
-.sidebar { width: 250px; background-color: #1a252f; color: white; display: flex; flex-direction: column; }
-.brand { padding: 20px; text-align: center; border-bottom: 1px solid #2c3e50; }
-.menu { flex: 1; display: flex; flex-direction: column; padding: 20px 0; }
-.menu a { color: #bdc3c7; text-decoration: none; padding: 15px 20px; }
-.menu a.active { background-color: #2c3e50; color: white; border-left: 4px solid #3498db; }
-.sidebar-footer { padding: 20px; }
-.btn-logout { width: 100%; padding: 12px; background-color: #e74c3c; color: white; border: none; cursor: pointer; border-radius: 4px;}
-.main-content { flex: 1; padding: 30px; overflow-y: auto; }
-.topbar { margin-bottom: 30px; }
-.recent-prospects { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-.section-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-.btn-primary { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ecf0f1; }
-.text-center { text-align: center; color: #7f8c8d; }
-.badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: capitalize; }
-.badge.pendiente { background-color: #fcf3cf; color: #f1c40f; }
-.badge.aprobada { background-color: #d1f2eb; color: #1abc9c; }
-.badge.rechazada { background-color: #fadbd8; color: #e74c3c; }
-.btn-icon { background: none; border: none; font-size: 18px; cursor: pointer; margin-right: 10px; opacity: 0.7; transition: opacity 0.3s; }
-.btn-icon:hover { opacity: 1; }
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: white; padding: 30px; border-radius: 10px; width: 400px; display: flex; flex-direction: column; gap: 10px; }
-.modal label { font-size: 13px; font-weight: bold; color: #34495e; margin-top: 5px; }
-.modal input, .modal select, .modal textarea { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-.btn-cancel { background: white; border: 1px solid #ccc; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-</style>

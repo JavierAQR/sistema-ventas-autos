@@ -1,56 +1,156 @@
 <template>
-  <div class="dashboard-layout">
-    <aside class="sidebar">
-      <div class="brand"><h2>🚗 AutoVentas</h2></div>
-      <nav class="menu">
-        <router-link to="/dashboard" active-class="active">📊 Panel Principal</router-link>
-        <router-link to="/vehiculos" active-class="active">🚙 Mis Vehículos</router-link>
-        <router-link to="/cotizaciones" active-class="active">📋 Cotizaciones</router-link>
-        <router-link to="/seguros" active-class="active">🛡️ Seguros</router-link>
+  <div class="flex h-screen bg-gray-100">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col">
+      <div class="p-5 text-center border-b border-slate-700">
+        <h2 class="text-xl font-bold">🚗 AutoVentas</h2>
+      </div>
+
+      <nav class="flex-1 py-5 flex flex-col">
+        <router-link
+          to="/dashboard"
+          active-class="bg-slate-700 border-l-4 border-blue-500"
+          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
+        >
+          📊 Panel Principal
+        </router-link>
+
+        <router-link
+          to="/vehiculos"
+          active-class="bg-slate-700 border-l-4 border-blue-500"
+          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
+        >
+          🚙 Mis Vehículos
+        </router-link>
+
+        <router-link
+          to="/cotizaciones"
+          active-class="bg-slate-700 border-l-4 border-blue-500"
+          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
+        >
+          📋 Cotizaciones
+        </router-link>
+
+        <router-link
+          to="/seguros"
+          active-class="bg-slate-700 border-l-4 border-blue-500"
+          class="px-5 py-3 text-gray-300 hover:bg-slate-800 transition"
+        >
+          🛡️ Seguros
+        </router-link>
       </nav>
-      <div class="sidebar-footer">
-        <button @click="cerrarSesion" class="btn-logout">🚪 Cerrar Sesión</button>
+
+      <div class="p-5">
+        <button
+          @click="cerrarSesion"
+          class="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg transition"
+        >
+          🚪 Cerrar Sesión
+        </button>
       </div>
     </aside>
 
-    <main class="main-content">
-      <header class="topbar">
-        <div class="welcome-text">
-          <h1>Administración de Seguros 🛡️</h1>
-          <p>Vincula pólizas vehiculares a las ventas cerradas.</p>
-        </div>
+    <!-- Contenido -->
+    <main class="flex-1 p-8 overflow-y-auto">
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">
+          Administración de Seguros 🛡️
+        </h1>
+
+        <p class="text-gray-600 mt-2">
+          Gestiona seguros prospectados y vendidos asociados a ventas
+          realizadas.
+        </p>
       </header>
 
-      <section class="recent-prospects">
-        <div class="section-header">
-          <h2>Pólizas Activas</h2>
-          <button @click="abrirModalNuevo" class="btn-primary">+ Registrar Póliza</button>
+      <section class="bg-white rounded-xl shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-800">Seguros Registrados</h2>
+
+          <button
+            @click="abrirModalNuevo"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold"
+          >
+            + Registrar Seguro
+          </button>
         </div>
-        
-        <div class="table-responsive">
-          <table>
+
+        <!-- Tabla -->
+        <div class="overflow-x-auto">
+          <table class="w-full">
             <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Vehículo Asegurado</th>
-                <th>Aseguradora</th>
-                <th>Cobertura</th>
-                <th>Costo Anual</th>
-                <th>Acciones</th>
+              <tr class="border-b text-left text-gray-600">
+                <th class="p-3">Cliente</th>
+
+                <th class="p-3">Vehículo</th>
+
+                <th class="p-3">Aseguradora</th>
+
+                <th class="p-3">Tipo Seguro</th>
+
+                <th class="p-3">Prima Esperada</th>
+
+                <th class="p-3">Estado</th>
+
+                <th class="p-3">Acciones</th>
               </tr>
             </thead>
+
             <tbody>
               <tr v-if="seguros.length === 0">
-                <td colspan="6" class="text-center">No hay seguros vinculados aún.</td>
+                <td colspan="7" class="p-5 text-center text-gray-500">
+                  No hay seguros registrados.
+                </td>
               </tr>
-              <tr v-for="seguro in seguros" :key="seguro.id">
-                <td>{{ seguro.cotizacion?.prospecto?.nombre }} {{ seguro.cotizacion?.prospecto?.apellido }}</td>
-                <td>{{ seguro.cotizacion?.vehiculo?.marca }} {{ seguro.cotizacion?.vehiculo?.modelo }}</td>
-                <td><strong>{{ seguro.aseguradora }}</strong></td>
-                <td>{{ seguro.tipo_cobertura }}</td>
-                <td>S/ {{ seguro.costo_anual }}</td>
-                <td>
-                  <button @click="eliminarSeguro(seguro.id)" class="btn-icon delete">🗑️</button>
+
+              <tr
+                v-for="seguro in seguros"
+                :key="seguro.id"
+                class="border-b hover:bg-gray-50"
+              >
+                <td class="p-3">
+                  {{ seguro.venta?.prospecto?.nombre || "Sin cliente" }}
+                  {{ seguro.venta?.prospecto?.apellido || "" }}
+                </td>
+
+                <td class="p-3">
+                  {{ seguro.venta?.vehiculo?.marca || "Sin vehículo" }}
+                  {{ seguro.venta?.vehiculo?.modelo || "" }}
+                </td>
+
+                <td class="p-3 font-semibold">
+                  {{ seguro.aseguradora }}
+                </td>
+
+                <td class="p-3">
+                  {{ seguro.tipo_seguro }}
+                </td>
+
+                <td class="p-3">S/ {{ seguro.prima_esperada }}</td>
+
+                <td class="p-3">
+                  <span
+                    v-if="seguro.estado === 'vendido'"
+                    class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700 font-semibold"
+                  >
+                    Vendido
+                  </span>
+
+                  <span
+                    v-else
+                    class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-700 font-semibold"
+                  >
+                    Prospectado
+                  </span>
+                </td>
+
+                <td class="p-3">
+                  <button
+                    @click="eliminarSeguro(seguro.id)"
+                    class="text-red-600 hover:text-red-800 text-xl"
+                  >
+                    🗑️
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -58,43 +158,143 @@
         </div>
       </section>
 
-      <div v-if="mostrarModal" class="modal-overlay">
-        <div class="modal">
-          <h3>Vincular Nueva Póliza</h3>
-          <form @submit.prevent="guardarSeguro">
-            
-            <label>Selecciona la Venta Cerrada (Cotización Aprobada):</label>
-            <select v-model="formulario.cotizacion_id" required>
-              <option value="" disabled>Elige una venta exitosa...</option>
-              <option v-for="venta in cotizacionesAprobadas" :key="venta.id" :value="venta.id">
-                {{ venta.prospecto?.nombre }} - {{ venta.vehiculo?.marca }} {{ venta.vehiculo?.modelo }}
-              </option>
-            </select>
+      <!-- Modal -->
 
-            <label>Empresa Aseguradora:</label>
-            <select v-model="formulario.aseguradora" required>
-              <option value="" disabled>Selecciona...</option>
-              <option value="Rimac">Rimac Seguros</option>
-              <option value="Pacífico">Pacífico Seguros</option>
-              <option value="Mapfre">Mapfre</option>
-              <option value="La Positiva">La Positiva</option>
-            </select>
+      <div
+        v-if="mostrarModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      >
+        <div class="bg-white rounded-xl shadow-xl p-6 w-[450px]">
+          <h3 class="text-xl font-bold mb-5">Registrar Seguro</h3>
 
-            <label>Tipo de Cobertura:</label>
-            <select v-model="formulario.tipo_cobertura" required>
-              <option value="" disabled>Selecciona...</option>
-              <option value="Todo Riesgo">Todo Riesgo (Full Cover)</option>
-              <option value="Daños a Terceros">Daños a Terceros</option>
-              <option value="Pérdida Total">Pérdida Total</option>
-            </select>
+          <form @submit.prevent="guardarSeguro" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Venta realizada
+              </label>
 
-            <label>Costo Anual (S/):</label>
-            <input v-model.number="formulario.costo_anual" type="number" step="0.01" placeholder="Ej: 1500.00" required />
+              <select
+                v-model="formulario.venta_id"
+                required
+                class="w-full border rounded-lg p-2"
+              >
+                <option value="" disabled>Seleccione una venta</option>
 
-            <div class="modal-actions">
-              <button type="button" @click="mostrarModal = false" class="btn-cancel">Cancelar</button>
-              <button type="submit" class="btn-primary" :disabled="cargando">
-                {{ cargando ? 'Guardando...' : 'Vincular Seguro' }}
+                <option
+                  v-for="venta in ventasRealizadas"
+                  :key="venta.id"
+                  :value="venta.id"
+                >
+                  {{ venta.prospecto?.nombre }}
+                  {{ venta.prospecto?.apellido }}
+                  -
+                  {{ venta.vehiculo?.marca }}
+                  {{ venta.vehiculo?.modelo }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Aseguradora
+              </label>
+
+              <input
+                v-model="formulario.aseguradora"
+                required
+                placeholder="Ej: Rimac"
+                class="w-full border rounded-lg p-2"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Tipo de seguro
+              </label>
+
+              <select
+                v-model="formulario.tipo_seguro"
+                required
+                class="w-full border rounded-lg p-2"
+              >
+                <option value="">Seleccione</option>
+
+                <option value="Todo Riesgo">Todo Riesgo</option>
+
+                <option value="Daños a terceros">Daños a terceros</option>
+
+                <option value="Pérdida Total">Pérdida Total</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Prima esperada
+              </label>
+
+              <input
+                v-model.number="formulario.prima_esperada"
+                type="number"
+                step="0.01"
+                required
+                class="w-full border rounded-lg p-2"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1"> Estado </label>
+
+              <select
+                v-model="formulario.estado"
+                class="w-full border rounded-lg p-2"
+              >
+                <option value="prospectado">Prospectado</option>
+
+                <option value="vendido">Vendido</option>
+              </select>
+            </div>
+
+            <div v-if="formulario.estado === 'vendido'">
+              <label class="block text-sm font-semibold mb-1">
+                Prima real
+              </label>
+
+              <input
+                v-model.number="formulario.prima_real"
+                type="number"
+                step="0.01"
+                required
+                class="w-full border rounded-lg p-2"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">
+                Observaciones
+              </label>
+
+              <textarea
+                v-model="formulario.observaciones"
+                rows="3"
+                class="w-full border rounded-lg p-2"
+              ></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3">
+              <button
+                type="button"
+                @click="mostrarModal = false"
+                class="px-4 py-2 border rounded-lg"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                :disabled="cargando"
+                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                {{ cargando ? "Guardando..." : "Guardar Seguro" }}
               </button>
             </div>
           </form>
@@ -105,120 +305,159 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
 
 const router = useRouter();
+
+const api = axios.create({
+  baseURL: "http://127.0.0.1:8001/api",
+});
+
+// Agregar token automáticamente
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  config.headers.Accept = "application/json";
+
+  return config;
+});
+
 const seguros = ref([]);
-const cotizaciones = ref([]);
+const ventas = ref([]);
+
 const mostrarModal = ref(false);
 const cargando = ref(false);
 
-const formulario = ref({ cotizacion_id: '', aseguradora: '', tipo_cobertura: '', costo_anual: '' });
-
-// Propiedad computada: Solo mostramos cotizaciones "aprobadas" en el select
-const cotizacionesAprobadas = computed(() => {
-  return cotizaciones.value.filter(c => c.estado === 'aprobada');
+const formulario = ref({
+  venta_id: "",
+  aseguradora: "",
+  tipo_seguro: "",
+  prima_esperada: "",
+  prima_real: null,
+  estado: "prospectado",
+  observaciones: "",
 });
 
-onMounted(() => {
-  const data = localStorage.getItem('vendedor_data');
-  if (!data) return router.push('/login');
-  
-  cargarSeguros();
-  cargarCotizaciones();
+// Solo mostrar ventas realizadas
+const ventasRealizadas = computed(() => {
+  return ventas.value.filter((venta) => venta.estado === "realizada");
+});
+
+onMounted(async () => {
+  const data = localStorage.getItem("vendedor_data");
+
+  if (!data) {
+    router.push("/login");
+    return;
+  }
+
+  await cargarSeguros();
+  await cargarVentas();
 });
 
 const cargarSeguros = async () => {
-  const token = localStorage.getItem('token');
-  const res = await fetch('http://127.0.0.1:8001/api/seguros', {
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-  });
-  if (res.ok) seguros.value = await res.json();
+  try {
+    const response = await api.get("/seguros");
+
+    seguros.value = response.data;
+
+  } catch (error) {
+    console.error("Error cargando seguros:", error);
+  }
 };
 
-const cargarCotizaciones = async () => {
-  const token = localStorage.getItem('token');
-  const res = await fetch('http://127.0.0.1:8001/api/cotizaciones', {
-    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-  });
-  if (res.ok) cotizaciones.value = await res.json();
+const cargarVentas = async () => {
+  try {
+    const response = await api.get("/ventas");
+
+    ventas.value = response.data;
+  } catch (error) {
+    console.error("Error cargando ventas:", error);
+  }
 };
 
 const abrirModalNuevo = () => {
-  formulario.value = { cotizacion_id: '', aseguradora: '', tipo_cobertura: '', costo_anual: '' };
+  formulario.value = {
+    venta_id: "",
+    aseguradora: "",
+    tipo_seguro: "",
+    prima_esperada: "",
+    prima_real: null,
+    estado: "prospectado",
+    observaciones: "",
+  };
+
   mostrarModal.value = true;
 };
 
 const guardarSeguro = async () => {
   cargando.value = true;
-  const token = localStorage.getItem('token');
-  
-  try {
-    const res = await fetch('http://127.0.0.1:8001/api/seguros', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
-      body: JSON.stringify(formulario.value)
-    });
 
-    if (res.ok) {
-      mostrarModal.value = false;
-      cargarSeguros();
-    } else {
-      alert("Hubo un error al guardar el seguro.");
-    }
+  try {
+    const data = {
+      venta_id: formulario.value.venta_id,
+
+      aseguradora: formulario.value.aseguradora,
+
+      tipo_seguro: formulario.value.tipo_seguro,
+
+      prima_esperada: formulario.value.prima_esperada,
+
+      prima_real:
+        formulario.value.estado === "vendido"
+          ? formulario.value.prima_real
+          : null,
+
+      estado: formulario.value.estado,
+
+      observaciones: formulario.value.observaciones,
+    };
+
+    await api.post("/seguros", data);
+
+    mostrarModal.value = false;
+
+    await cargarSeguros();
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error registrando seguro:", error);
+
+    if (error.response?.data?.message) {
+      alert(error.response.data.message);
+    } else {
+      alert("Error al registrar seguro");
+    }
   } finally {
     cargando.value = false;
   }
 };
 
 const eliminarSeguro = async (id) => {
-  if (!confirm('¿Seguro que deseas desvincular este seguro?')) return;
-  const token = localStorage.getItem('token');
+  const confirmar = confirm("¿Seguro que deseas eliminar este seguro?");
+
+  if (!confirmar) return;
+
   try {
-    const res = await fetch(`http://127.0.0.1:8001/api/seguros/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-    });
-    if (res.ok) cargarSeguros();
+    await api.delete(`/seguros/${id}`);
+
+    await cargarSeguros();
   } catch (error) {
-    console.error("Error al eliminar:", error);
+    console.error("Error eliminando seguro:", error);
+
+    alert("No se pudo eliminar el seguro");
   }
 };
 
 const cerrarSesion = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('vendedor_data');
-  router.push('/login');
+  localStorage.removeItem("token");
+
+  localStorage.removeItem("vendedor_data");
+
+  router.push("/login");
 };
 </script>
-
-<style scoped>
-/* Los mismos estilos compartidos del Dashboard (kpi-grid, sidebar, modal, tables, etc.) */
-.dashboard-layout { display: flex; height: 100vh; background-color: #f4f7f6; font-family: sans-serif; }
-.sidebar { width: 250px; background-color: #1a252f; color: white; display: flex; flex-direction: column; }
-.brand { padding: 20px; text-align: center; border-bottom: 1px solid #2c3e50; }
-.menu { flex: 1; display: flex; flex-direction: column; padding: 20px 0; }
-.menu a { color: #bdc3c7; text-decoration: none; padding: 15px 20px; }
-.menu a.active { background-color: #2c3e50; color: white; border-left: 4px solid #3498db; }
-.sidebar-footer { padding: 20px; }
-.btn-logout { width: 100%; padding: 12px; background-color: #e74c3c; color: white; border: none; cursor: pointer; border-radius: 4px;}
-.main-content { flex: 1; padding: 30px; overflow-y: auto; }
-.topbar { margin-bottom: 30px; }
-.recent-prospects { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-.section-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-.btn-primary { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;}
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ecf0f1; }
-.text-center { text-align: center; color: #7f8c8d; }
-.btn-icon { background: none; border: none; font-size: 18px; cursor: pointer; margin-right: 10px; opacity: 0.7; transition: opacity 0.3s; }
-.btn-icon:hover { opacity: 1; }
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: white; padding: 30px; border-radius: 10px; width: 400px; display: flex; flex-direction: column; gap: 10px; }
-.modal label { font-size: 13px; font-weight: bold; color: #34495e; margin-top: 5px; }
-.modal input, .modal select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-.btn-cancel { background: white; border: 1px solid #ccc; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-</style>
