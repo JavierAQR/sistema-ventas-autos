@@ -57,27 +57,29 @@ class VentaController extends Controller
 
         $data = $request->validate([
             'prospecto_id'   => 'sometimes|exists:prospectos,id',
-            'vendedor_id' => 'required|exists:vendedores,id',
+            'vendedor_id'    => 'sometimes|exists:vendedores,id',
             'vehiculo_id'    => 'sometimes|exists:vehiculos,id',
             'monto_venta'    => 'sometimes|numeric|min:0',
             'estado'         => 'sometimes|in:realizada,fallida',
             'motivo_perdida' => 'nullable|string'
         ]);
 
-        if (
-            isset($data['estado']) &&
-            $data['estado'] === 'fallida' &&
-            empty($data['motivo_perdida'])
-        ) {
-            return response()->json([
-                'mensaje' => 'El motivo de pérdida es obligatorio para una venta fallida.'
-            ], 422);
+        // Determinar el estado final (el nuevo si viene, o el actual si no)
+        $estadoFinal = $data['estado'] ?? $venta->estado;
+
+        if ($estadoFinal === 'fallida') {
+            $motivoFinal = $data['motivo_perdida'] ?? $venta->motivo_perdida;
+
+            if (empty($motivoFinal)) {
+                return response()->json([
+                    'mensaje' => 'El motivo de pérdida es obligatorio para una venta fallida.'
+                ], 422);
+            }
+
+            $data['motivo_perdida'] = $motivoFinal;
         }
 
-        if (
-            isset($data['estado']) &&
-            $data['estado'] === 'realizada'
-        ) {
+        if ($estadoFinal === 'realizada') {
             $data['motivo_perdida'] = null;
         }
 
@@ -85,7 +87,7 @@ class VentaController extends Controller
 
         return response()->json([
             'mensaje' => 'Venta actualizada correctamente.',
-            'venta' => $venta
+            'venta' => $venta->fresh(['prospecto', 'vehiculo', 'seguro'])
         ], 200);
     }
 

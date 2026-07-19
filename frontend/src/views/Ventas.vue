@@ -103,27 +103,61 @@
           </h3>
 
           <form @submit.prevent="guardarVenta" class="space-y-4">
-            <label class="font-semibold"> Cotización aprobada: </label>
-
-            <select
-              v-model="formulario.cotizacion_id"
-              @change="seleccionarCotizacion"
-              class="w-full border p-2 rounded"
-              :disabled="modoEdicion"
-            >
-              <option value="">Seleccionar...</option>
-
-              <option
-                v-for="cotizacion in cotizacionesAprobadas"
-                :key="cotizacion.id"
-                :value="cotizacion.id"
+            <!-- Modo creación: selector de cotización -->
+            <div v-if="!modoEdicion">
+              <label class="font-semibold block mb-1"
+                >Cotización aprobada</label
               >
-                {{ cotizacion.prospecto?.nombre }}
-                -
-                {{ cotizacion.vehiculo?.marca }}
-                {{ cotizacion.vehiculo?.modelo }}
-              </option>
-            </select>
+
+              <select
+                v-model="formulario.cotizacion_id"
+                @change="seleccionarCotizacion"
+                class="w-full border p-2 rounded"
+                required
+              >
+                <option value="" disabled>Seleccionar...</option>
+
+                <option
+                  v-for="cotizacion in cotizacionesAprobadas"
+                  :key="cotizacion.id"
+                  :value="cotizacion.id"
+                >
+                  {{ cotizacion.prospecto?.nombre }}
+                  -
+                  {{ cotizacion.vehiculo?.marca }}
+                  {{ cotizacion.vehiculo?.modelo }}
+                </option>
+              </select>
+
+              <p
+                v-if="cotizacionesAprobadas.length === 0"
+                class="text-sm text-gray-500 mt-1"
+              >
+                No hay cotizaciones aprobadas disponibles.
+              </p>
+            </div>
+
+            <!-- Modo edición: solo lectura, no se puede reasignar -->
+            <div v-else class="bg-gray-50 border rounded p-3">
+              <label class="font-semibold block mb-1 text-gray-600 text-sm">
+                Cliente y vehículo
+              </label>
+
+              <p class="text-gray-800 font-medium">
+                {{ ventaEditando?.prospecto?.nombre }}
+                {{ ventaEditando?.prospecto?.apellido }}
+              </p>
+
+              <p class="text-gray-600 text-sm">
+                {{ ventaEditando?.vehiculo?.marca }}
+                {{ ventaEditando?.vehiculo?.modelo }}
+              </p>
+
+              <p class="text-xs text-gray-400 mt-1">
+                El cliente y vehículo no se pueden modificar una vez creada la
+                venta.
+              </p>
+            </div>
 
             <input
               v-model.number="formulario.monto_venta"
@@ -133,20 +167,31 @@
               required
             />
 
-            <select
-              v-model="formulario.estado"
-              class="w-full border p-2 rounded"
-            >
-              <option value="realizada">Realizada</option>
+            <div>
+              <label class="font-semibold block mb-1">Estado</label>
 
-              <option value="fallida">Fallida</option>
-            </select>
+              <select
+                v-model="formulario.estado"
+                class="w-full border p-2 rounded"
+              >
+                <option value="realizada">Realizada</option>
+                <option value="fallida">Fallida</option>
+              </select>
+            </div>
 
-            <textarea
-              v-model="formulario.motivo_perdida"
-              placeholder="Motivo de pérdida"
-              class="w-full border p-2 rounded"
-            />
+            <!-- Solo aparece si la venta es fallida -->
+            <div v-if="formulario.estado === 'fallida'">
+              <label class="font-semibold block mb-1">
+                Motivo de pérdida <span class="text-red-500">*</span>
+              </label>
+
+              <textarea
+                v-model="formulario.motivo_perdida"
+                placeholder="Ej: El cliente no calificó para el crédito"
+                class="w-full border p-2 rounded"
+                required
+              ></textarea>
+            </div>
 
             <div class="flex justify-end gap-3">
               <button
@@ -172,7 +217,7 @@
 </template>
 <script setup>
 import Sidebar from "@/components/Sidebar.vue";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -200,6 +245,8 @@ const formulario = ref({
 
   motivo_perdida: "",
 });
+
+const ventaEditando = ref(null);
 
 /*
 |--------------------------------------------------------------------------
@@ -310,21 +357,16 @@ const seleccionarCotizacion = () => {
 
 const abrirModalNuevo = () => {
   modoEdicion.value = false;
+  ventaEditando.value = null;
 
   formulario.value = {
     id: null,
-
     cotizacion_id: "",
-
     prospecto_id: "",
     vehiculo_id: "",
-
     vendedor_id: 1,
-
     monto_venta: "",
-
     estado: "realizada",
-
     motivo_perdida: "",
   };
 
@@ -339,22 +381,16 @@ const abrirModalNuevo = () => {
 
 const abrirModalEditar = (venta) => {
   modoEdicion.value = true;
+  ventaEditando.value = venta;
 
   formulario.value = {
     id: venta.id,
-
     cotizacion_id: "",
-
     prospecto_id: venta.prospecto_id,
-
     vehiculo_id: venta.vehiculo_id,
-
     vendedor_id: venta.vendedor_id,
-
     monto_venta: venta.monto_venta,
-
     estado: venta.estado,
-
     motivo_perdida: venta.motivo_perdida ?? "",
   };
 
@@ -461,4 +497,9 @@ const eliminarVenta = async (id) => {
   }
 };
 
+watch(() => formulario.value.estado, (nuevoEstado) => {
+  if (nuevoEstado === "realizada") {
+    formulario.value.motivo_perdida = "";
+  }
+});
 </script>
