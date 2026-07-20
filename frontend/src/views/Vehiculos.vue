@@ -70,7 +70,7 @@
                   ✏️
                 </button>
 
-                <button @click="eliminarVehiculo(vehiculo.id)">🗑️</button>
+                <!-- <button @click="eliminarVehiculo(vehiculo.id)">🗑️</button> -->
               </td>
             </tr>
 
