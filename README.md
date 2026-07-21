@@ -1,13 +1,5 @@
 # Guía de instalación — Sistema AutoVentas
 
-## ⚠️ Nota sobre arquitectura
-
-El proyecto está pensado a futuro como microservicios (por eso el contenedor
-se llama `ms-prospectos`), pero **actualmente todo el backend es un monolito
-Laravel** dentro de ese único contenedor: prospectos, vehículos, cotizaciones,
-ventas y seguros viven ahí juntos. La separación en microservicios está en
-espera. Esta guía refleja el estado actual (monolito).
-
 ## 1. Requisitos previos
 
 Cada integrante del equipo debe tener instalado:
